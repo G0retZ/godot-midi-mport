@@ -93,7 +93,11 @@ class Chunk:
 		bytes = p_bytes.slice(8, 8 + size)
 
 
+## A representation of a MIDI header.
+##
+## It is created automatically when parsing MIDI file.
 class Header:
+## MIDI file format.
 	enum Format {
 		## File has the only Track chunk that contains all the events.
 		SINGLE_TRACK = 0,
@@ -102,10 +106,16 @@ class Header:
 		## File has one or more Tracks. Each Track is independent SINGLE_TRACK.
 		MULTI_SONG = 2
 	}
+	## MIDI format
 	var format: Format
+	## Number of tracks as recorded in the header.
+	## It is technically possible that the MIDI file has more or less track chuks than defined in the header.
+	## It's up to you to treat it as an error or disregard this value.
 	var tracks: int
-	var ticks_per_beat: int = -1
-	var ms_per_tick: float = -1
+	## How long is 1 tick in milliseconds. If -1 then it is PPQ timing format and [ticks_per_beat] should be used for calculations.
+	var ms_per_tick: float
+	## Number of ticks in one beat. If -1 then it is SMPTE timing format [ms_per_tick] should be used for calculations.
+	var ticks_per_beat: int
 	
 	
 	static func _from_chunk(chunk: MidiData.Chunk) -> Header:
@@ -141,10 +151,11 @@ class Header:
 		return header
 	
 	
-	## converts the provided [us_per_beat] and [delta_time] to seconds.
+	## Convert the provided [us_per_beat] and [delta_time] to seconds.
 	##
 	## Calculation depends on the time division set in this header.
 	## In case of SMPTE format the [us_per_beat] is ignored and doesn't affect the result.
+	## It's preferable to rely on this method than to make calculations by hand.
 	func convert_to_seconds(us_per_beat: int, delta_time: int) -> float:
 		var sec_per_beat := us_per_beat / 1_000_000.0
 		var delay: float = delta_time * ms_per_tick / 1000.0
@@ -153,7 +164,11 @@ class Header:
 		return delay
 
 
+## A representation of a MIDI track.
+##
+## It is created automatically when parsing MIDI file.
 class Track:
+	## Events in this track in order of appearance
 	var events : Array[MidiData.Event] = []
 	
 	
@@ -173,7 +188,7 @@ class Track:
 		return track
 	
 	
-	## Build a tempo map from this Track.
+	## Builds and returns a tempo map from this Track.
 	##
 	## If no Tempo event present at the beginning of the Track then adds an entry
 	## with default value of 500_000 for the [us_per_beat] at position 0.
@@ -194,8 +209,8 @@ class Track:
 		return tempo_map
 	
 	
-	## Returns offset of this Track in seconds. If no SmpteOffset event
-	## present returns 0
+	## Returns offset of all events in this Track in seconds. If no SmpteOffset event
+	## present in this track returns 0
 	func get_offset_in_seconds() -> float:
 		for event in events:
 			var offset = event as MidiData.SmpteOffset
@@ -204,9 +219,14 @@ class Track:
 		return 0
 
 
+## A representation of any Event in the Track.
+##
+## It is created automatically when parsing MIDI Track.
 class Event:
-	static var last_status: int = -1
-	var delta_time : int = 0
+	static var _last_status: int = -1
+	## A distance from previous Event in ticks.
+	## Use to calculate for how long to wait after previous event before firing this one.
+	var delta_time: int
 	var _full_size: int = 0
 	
 	
@@ -215,9 +235,9 @@ class Event:
 		var status := bytes[var_time_data.y]
 		var event_data := bytes.slice(var_time_data.y + 1)
 		if status < 0x80: # check for running status
-			status = last_status
+			status = _last_status
 			event_data = bytes.slice(var_time_data.y)
-		last_status = status
+		_last_status = status
 		var clean_status := (status & 0xF0) if status < 0xF0 else status
 		MidiData._log("    event")
 		MidiData._log("        delta_time: %d" % var_time_data.x)
@@ -407,7 +427,11 @@ class PitchWheel extends Voice:
 		value = ((bytes[0] & 0x7F) << 7) + (bytes[1] & 0x7F)
 		_full_size = 2
 
-
+## System common event. Used just for classification purpose.
+##
+## SINGLE_TRACK: no additional notes 
+## MULTI_TRACK: no additional notes
+## MULTI_SONG: no additional notes
 class SystemCommon extends Event:
 	func _init():
 		MidiData._log("        SystemCommon < Event")
@@ -493,6 +517,7 @@ class TuneRequest extends SystemCommon:
 		MidiData._log("        TuneRequest < SystemCommon < Event")
 
 
+## Real time event. Used just for classification purpose.
 class RealTime extends Event:
 	func _init():
 		MidiData._log("        RealTime < Event")
@@ -558,6 +583,8 @@ class ActiveSense extends RealTime:
 		MidiData._log("        ActiveSense < RealTime < Event")
 
 
+## Meta event. Used for classification purpose. There is a number of meta event types.
+## All meta events inherit this one.
 class Meta extends Event:
 	static func _from_bytes(bytes: PackedByteArray) -> MidiData.Meta:
 		var type := bytes[0]
