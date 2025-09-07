@@ -1,7 +1,13 @@
 ###### spent several days working on this and debugging. Inintially I tryed to use [GDScript Midi File Parser](https://github.com/brainfoolong/gdscript-midi-parser) but it turned out confusing and not very convenient to use. So I decided to improve it... And now we are here 🙃
 
 <p align="center">
+	<img src="https://img.shields.io/liberapay/patrons/G0retZ.svg?logo=liberapay">
+</p>
+<p align="center">
 	<img src="https://github.com/G0retZ/godot-midi-mport/blob/main/icon/icon.svg?raw=true" width="256">
+</p>
+<p align="center">
+	<noscript><a href="https://liberapay.com/G0retZ/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>
 </p>
 
 # Godot 4+ Importer for MIDI (.mid) files.
@@ -76,4 +82,8 @@ func _play():
 
 ## Enjoy using it!
 
-🌻 If you find this addon helpful, please consider supporting my efforts by [**buying me a coffee (donating)**](http://ko-fi.com/g0retz)! I would appreciate it very much 😊
+🌻 If you find this addon helpful, please consider supporting my efforts on **Liberapay**! I would appreciate it very much 😊
+
+<p align="center">
+	<noscript><a href="https://liberapay.com/G0retZ/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>
+</p>
