@@ -234,7 +234,9 @@ class Event:
 		var var_time_data := MidiData._buffer_to_variable_int(bytes)
 		var status := bytes[var_time_data.y]
 		var event_data := bytes.slice(var_time_data.y + 1)
+		var use_last_status := false
 		if status < 0x80: # check for running status
+			use_last_status = true
 			status = _last_status
 			event_data = bytes.slice(var_time_data.y)
 		_last_status = status
@@ -271,6 +273,8 @@ class Event:
 			event = MidiData.NoteOff.new(status, event_data)
 		event.delta_time = var_time_data.x
 		event._full_size += var_time_data.y + 1
+		if use_last_status:
+			event._full_size -= 1
 		MidiData._log("        size: %d" % event._full_size)
 		return event
 
