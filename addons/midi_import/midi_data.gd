@@ -231,18 +231,18 @@ class Event:
 	
 	
 	static func _from_bytes(bytes: PackedByteArray) -> MidiData.Event:
-		var var_time_data := MidiData._buffer_to_variable_int(bytes)
-		var status := bytes[var_time_data.y]
-		var event_data := bytes.slice(var_time_data.y + 1)
+		var timestamp_data := MidiData._buffer_to_variable_int(bytes)
+		var status := bytes[timestamp_data.y]
+		var event_data := bytes.slice(timestamp_data.y + 1)
 		var use_last_status := false
 		if status < 0x80: # check for running status
 			use_last_status = true
 			status = _last_status
-			event_data = bytes.slice(var_time_data.y)
+			event_data = bytes.slice(timestamp_data.y)
 		_last_status = status
 		var clean_status := (status & 0xF0) if status < 0xF0 else status
 		MidiData._log("    event")
-		MidiData._log("        delta_time: %d" % var_time_data.x)
+		MidiData._log("        delta_time: %d" % timestamp_data.x)
 		var event: MidiData.Event
 		match clean_status :
 			0x80: event = MidiData.NoteOff.new(status, event_data)
@@ -271,8 +271,8 @@ class Event:
 		var on_event := event as NoteOn
 		if on_event != null and on_event.velocity == 0:
 			event = MidiData.NoteOff.new(status, event_data)
-		event.delta_time = var_time_data.x
-		event._full_size += var_time_data.y + 1
+		event.delta_time = timestamp_data.x
+		event._full_size += timestamp_data.y + 1
 		if use_last_status:
 			event._full_size -= 1
 		MidiData._log("        size: %d" % event._full_size)
