@@ -1,3 +1,6 @@
+# ⚠️ This project migrated to [Codeberg](https://codeberg.org/G0retZ/godot-midi-mport) ⚠️
+
+
 ###### spent several days working on this and debugging. Inintially I tryed to use [GDScript Midi File Parser](https://github.com/brainfoolong/gdscript-midi-parser) but it turned out confusing and not very convenient to use. So I decided to improve it... And now we are here 🙃
 
 <p align="center">
